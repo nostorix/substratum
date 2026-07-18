@@ -1,4 +1,4 @@
-{ inputs, ... }: {
+{ self, inputs, ... }: {
   flake = {
     lib = {
       mkNeovim =
@@ -9,7 +9,7 @@
         (inputs.nvf.lib.neovimConfiguration {
           inherit pkgs;
           modules = [
-            (import ./_config.nix)
+            self.nvf.config
           ]
           ++ modules;
         }).neovim;
