@@ -4,6 +4,7 @@
   fetchurl,
   pkgs,
   forceX11 ? false,
+  ...
 }:
 let
   pname = "hayase";

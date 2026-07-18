@@ -31,6 +31,7 @@
   SDL2_mixer,
   gtk3,
   wrapGAppsHook3,
+  ...
 }:
 
 buildDotnetModule rec {

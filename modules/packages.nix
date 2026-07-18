@@ -21,20 +21,14 @@
         lib.listToAttrs (
           map (file: {
             name = lib.removeSuffix ".nix" (baseNameOf file);
-            value = pkgs.callPackage file { };
+            value = pkgs.callPackage file { inherit self; };
           }) tree.result
         );
-      apps =
-        lib.mapAttrs
-          (name: pkg: {
-            type = "app";
-            program = lib.getExe pkg;
-            meta = pkg.meta;
-          })
-          (
-            lib.filterAttrs (
-              name: pkg: (pkg ? meta.mainProgram) || (builtins.pathExists "${pkg}/bin")
-            ) self'.packages
-          );
+
+      apps = lib.mapAttrs (name: pkg: {
+        type = "app";
+        program = if pkg ? meta.mainProgram then lib.getExe pkg else lib.getExe' pkg name;
+      }) self'.packages;
+
     };
 }

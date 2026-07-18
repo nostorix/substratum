@@ -1,4 +1,4 @@
-{ pkgs }:
+{ pkgs, ... }:
 # TODO: Move this to my nixos config instead lol.
 pkgs.writeShellApplication {
   name = "wake-home";
