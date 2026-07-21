@@ -126,7 +126,7 @@
               };
               options = {
                 nvf = {
-                  expr = ''((builtins.getFlake "github:NotAShelf/nvf").lib.neovimConfiguration {pkgs={};}).options'';
+                  expr = "((import <nvf>).lib.neovimConfiguration {pkgs=(import <nixpkgs>);}).options";
                 };
                 flake_parts = {
                   expr = ''
