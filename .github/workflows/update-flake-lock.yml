@@ -21,8 +21,11 @@ jobs:
           commit-msg: "chore(flake): bump inputs"
           pr-title: "chore(flake): bump inputs"
           token: ${{ steps.app-token.outputs.token }}
-          sign-commits: true
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           pr-labels: |
             auto-merge
+
+      - name: Enable GitHub Native Auto-Merge
+        if: steps.update.outputs.pull-request-number != ''
+        run: "gh pr merge --auto --squash ${{ steps.update.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
