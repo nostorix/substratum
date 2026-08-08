@@ -1,4 +1,4 @@
-name: Auto Merge Deps.
+name: Auto Merge Deps
 on:
   - pull_request_target
 jobs:
@@ -7,8 +7,16 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    concurrency:
-      group: "auto-merge:${{ github.head_ref }}"
-      cancel-in-progress: true
     steps:
-      - uses: Mic92/auto-merge@main
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      
+      - name: Enable GitHub Native Auto-Merge
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
