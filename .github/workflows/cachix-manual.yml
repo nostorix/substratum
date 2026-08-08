@@ -44,7 +44,7 @@ jobs:
           if [ -n "$TARGET" ]; then
             echo "Target defined: Manual package build for targets: $TARGET"
             for pkg in $TARGET; do
-              ARGS+=("-flake" ".#packages.${{ matrix.system }}.$pkg")
+              ARGS+=("-f" ".#packages.${{ matrix.system }}.$pkg")
             done
 
             nix run github:Mic92/nix-fast-build -- \
