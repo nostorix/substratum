@@ -20,9 +20,17 @@ jobs:
         with:
           commit-msg: "chore(flake): bump inputs"
           pr-title: "chore(flake): bump inputs"
+          git-author-name: "substratum-flake-updater[bot]"
+          git-author-email: "314526475+substratum-flake-updater[bot]@users.noreply.github.com"
+          git-committer-name: "substratum-flake-updater[bot]"
+          git-committer-email: "314526475+substratum-flake-updater[bot]@users.noreply.github.com"
           token: ${{ steps.app-token.outputs.token }}
-          sign-commits: true
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           pr-labels: |
             auto-merge
+
+      - name: Enable GitHub Native Auto-Merge
+        if: steps.update.outputs.pull-request-number != ''
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ steps.update.outputs.pull-request-url }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
