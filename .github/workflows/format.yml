@@ -1,0 +1,40 @@
+name: "apply nix fmt"
+
+on:
+  push:
+    paths:
+      - '*/**'
+      - '!*'
+      - '!.*'
+      - '!.*/**'
+  pull_request:
+    paths:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect Changes
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          predicate-quantifier: 'some-with-excludes'
+          filters: |
+            run_checks:
+              - '*/**'
+              - '!*'
+              - '!.*'
+              - '!.*/**'
+
+      - name: Install Nix
+        if: github.event_name == 'push' || (steps.filter.outputs.run_fmt == 'true')
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Check formatting
+        if: github.event_name == 'push' || (steps.filter.outputs.run_fmt == 'true')
+        run: |
+          nix fmt
+          git diff --exit-code
+

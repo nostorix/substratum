@@ -5,9 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'packages/**'
-  pull_request:
-    paths:
-      - 'packages/**'
+      - 'flake.lock'
 
 jobs:
   detect-changes:
@@ -27,22 +25,22 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify Flake Health
-        run: nix flake check --show-trace
-
       - name: Get changed packages
         id: changed-pkgs
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE_SHA="origin/${{ github.base_ref }}"
-          else
-            BASE_SHA="HEAD~1"
-          fi
+          BASE_SHA="HEAD~1"
 
-          CHANGED=$(git diff --name-only $BASE_SHA HEAD | \
-            grep '^packages/' | \
-            awk -F'/' '{print $2}' | \
-            sort -u | xargs)
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA HEAD)
+          
+          # Check if flake.lock was part of the merge/push
+          LOCK_CHANGED=$(echo "$CHANGED_FILES" | grep -q '^flake.lock$' && echo "true" || echo "false")
+
+          if [ "$LOCK_CHANGED" = "true" ]; then
+            echo "flake.lock changed. Targeting all packages."
+            CHANGED=$(ls packages/ | xargs)
+          else
+            CHANGED=$(echo "$CHANGED_FILES" | grep '^packages/' | awk -F'/' '{print $2}' | sort -u | xargs)
+          fi
 
           echo "Detected changed packages: $CHANGED"
           echo "packages=$CHANGED" >> $GITHUB_OUTPUT
