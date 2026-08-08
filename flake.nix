@@ -26,6 +26,11 @@
 
       debug = true;
       imports = [
+        {
+          perSystem = { pkgs, ... }: {
+            formatter = pkgs.nixfmt-tree;
+          };
+        }
         (inputs.import-tree ./modules)
       ];
     };

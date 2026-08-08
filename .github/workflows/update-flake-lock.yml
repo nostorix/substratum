@@ -1,4 +1,5 @@
 name: "Update flakes"
+
 on:
   workflow_dispatch:
   schedule:
@@ -17,12 +18,18 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/update-flake-lock@main
         id: update
+        env: 
+            GH_TOKEN: ${{ steps.app-token.outputs.token }}
         with:
           commit-msg: "chore(flake): bump inputs"
           pr-title: "chore(flake): bump inputs"
           token: ${{ steps.app-token.outputs.token }}
-          sign-commits: true
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           pr-labels: |
             auto-merge
+
+      - name: Enable GitHub Native Auto-Merge
+        if: steps.update.outputs.pull-request-number != ''
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ steps.update.outputs.pull-request-url }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
