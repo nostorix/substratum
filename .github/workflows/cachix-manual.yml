@@ -1,0 +1,57 @@
+name: "Manual Cachix Build"
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_target:
+        description: 'What to build? (Leave blank for EVERYTHING, or separate multiple packages with spaces)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            system: x86_64-linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Flake Health
+        run: nix flake check --show-trace
+
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v17
+        with:
+          name: substratum
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Run nix-fast-build
+        run: |
+          ARGS=()
+          TARGET="${{ github.event.inputs.build_target }}"
+
+          if [ -n "$TARGET" ]; then
+            echo "Target defined: Manual package build for targets: $TARGET"
+            for pkg in $TARGET; do
+              ARGS+=("-a" "packages.${{ matrix.system }}.$pkg")
+            done
+          else
+            echo "No target defined: Evaluation & building of ALL flake outputs"
+          fi
+
+          nix run github:Mic92/nix-fast-build -- \
+            --flake . \
+            "${ARGS[@]}" \
+            --skip-cached \
+            --no-nom
