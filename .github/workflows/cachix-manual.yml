@@ -54,7 +54,7 @@ jobs:
           else
             echo "No target defined: Evaluation & building of ALL flake outputs"
             nix run github:Mic92/nix-fast-build -- \
-              --flake . \
+              -f .#packages.${{ matrix.system }} \
               --skip-cached \
               --no-nom
           fi
