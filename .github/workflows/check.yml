@@ -1,0 +1,37 @@
+name: Flake check
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  flake-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Detect Changes
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          predicate-quantifier: 'some-with-excludes'
+          filters: |
+            run_checks:
+              - '*/**'
+              - '!*'
+              - '!.*'
+              - '!.*/**'
+
+      - name: Install Nix
+        if: ${{ steps.filter.outputs.run_checks == 'true' }}
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Nix Magic Cache
+        if: ${{ steps.filter.outputs.run_checks == 'true' }}
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Run Flake Check
+        if: ${{ steps.filter.outputs.run_checks == 'true' }}
+        run: nix flake check --show-trace

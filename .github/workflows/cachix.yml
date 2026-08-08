@@ -5,9 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'packages/**'
-  pull_request:
-    paths:
-      - 'packages/**'
+      - 'flake.lock'
 
 jobs:
   detect-changes:
@@ -16,6 +14,7 @@ jobs:
       contents: read
     outputs:
       packages: ${{ steps.changed-pkgs.outputs.packages }}
+      flake_changed: ${{ steps.changed-pkgs.outputs.flake_changed }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -27,29 +26,28 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify Flake Health
-        run: nix flake check --show-trace
-
       - name: Get changed packages
         id: changed-pkgs
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE_SHA="origin/${{ github.base_ref }}"
+          BASE_SHA="HEAD~1"
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA HEAD)
+          
+          # Check if flake.lock was part of the merge/push
+          LOCK_CHANGED=$(echo "$CHANGED_FILES" | grep -q '^flake.lock$' && echo "true" || echo "false")
+          
+          if [ "$LOCK_CHANGED" = "true" ]; then
+            echo "flake.lock changed."
           else
-            BASE_SHA="HEAD~1"
+            CHANGED=$(echo "$CHANGED_FILES" | grep '^packages/' | awk -F'/' '{print $2}' | sort -u | xargs)
           fi
-
-          CHANGED=$(git diff --name-only $BASE_SHA HEAD | \
-            grep '^packages/' | \
-            awk -F'/' '{print $2}' | \
-            sort -u | xargs)
-
-          echo "Detected changed packages: $CHANGED"
+          
+          echo "Detected changed packages: $CHANGED, flake_changed: $LOCK_CHANGED"
           echo "packages=$CHANGED" >> $GITHUB_OUTPUT
+          echo "flake_changed=$LOCK_CHANGED" >> $GITHUB_OUTPUT
 
   build:
     needs: detect-changes
-    if: needs.detect-changes.outputs.packages != ''
+    if: needs.detect-changes.outputs.packages != '' || needs.detect-changes.outputs.flake_changed == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -72,13 +70,22 @@ jobs:
           name: nix-substratum
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: Run nix-fast-build
+      - name: Run nix-fast-build (Flake Changed)
+        if: needs.detect-changes.outputs.flake_changed == 'true'
+        run: |
+          nix run github:Mic92/nix-fast-build -- \
+            -f .#packages.${{ matrix.system }} \
+            --skip-cached \
+            --no-nom
+
+      - name: Run nix-fast-build (Specific Packages)
+        if: needs.detect-changes.outputs.flake_changed != 'true'
         run: |
           ARGS=()
           for pkg in ${{ needs.detect-changes.outputs.packages }}; do
             ARGS+=("-f" "packages.${{ matrix.system }}.$pkg")
           done
-
+          
           nix run github:Mic92/nix-fast-build -- \
             "${ARGS[@]}" \
             --skip-cached \
