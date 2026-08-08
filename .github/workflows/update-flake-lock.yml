@@ -21,6 +21,7 @@ jobs:
           commit-msg: "chore(flake): bump inputs"
           pr-title: "chore(flake): bump inputs"
           token: ${{ steps.app-token.outputs.token }}
+          sign-commits: true
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           pr-labels: |
