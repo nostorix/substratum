@@ -83,7 +83,7 @@ jobs:
         run: |
           ARGS=()
           for pkg in ${{ needs.detect-changes.outputs.packages }}; do
-            ARGS+=("-f" "packages.${{ matrix.system }}.$pkg")
+            ARGS+=("-f" "#packages.${{ matrix.system }}.$pkg")
           done
           
           nix run github:Mic92/nix-fast-build -- \
