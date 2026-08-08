@@ -6,6 +6,8 @@ on:
 
 jobs:
   lockfile:
+    permissions: 
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,14 +17,46 @@ jobs:
           client-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/update-flake-lock@main
-        id: update
+
+      - name: Update flake.lock
+        id: update_step
+        run: |
+          nix flake update 2> nix_log.txt
+          
+          if git diff --exit-code flake.lock > /dev/null; then
+            echo "No changes detected."
+            echo "changes=false" >> "$GITHUB_OUTPUT"
+            rm nix_log.txt
+          else
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+            
+            echo "PR_BODY<<EOF" >> "$GITHUB_ENV"
+            echo "Automated changes to \`flake.lock\`:" >> "$GITHUB_ENV"
+            echo "\`\`\`text" >> "$GITHUB_ENV"
+            cat nix_log.txt >> "$GITHUB_ENV"
+            echo "\`\`\`" >> "$GITHUB_ENV"
+            echo "EOF" >> "$GITHUB_ENV"
+            
+            rm nix_log.txt
+          fi
+
+      - name: Create Signed Commit and PR
+        if: steps.update_step.outputs.changes == 'true'
+        id: cpr
+        uses: peter-evans/create-pull-request@v8
         with:
-          commit-msg: "chore(flake): bump inputs"
-          pr-title: "chore(flake): bump inputs"
           token: ${{ steps.app-token.outputs.token }}
+          commit-message: "chore(flake): bump inputs"
+          title: "chore(flake): bump inputs"
+          body: ${{ env.PR_BODY }}
+          branch: "update_flake_lock_action"
+          delete-branch: true
           sign-commits: true
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          pr-labels: |
+          labels: |
             auto-merge
+
+      - name: Enable GitHub Native Auto-Merge
+        if: steps.update_step.outputs.changes == 'true' && steps.cpr.outputs.pull-request-number != ''
+        run: gh pr merge --auto --squash ${{ steps.cpr.outputs.pull-request-number }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
