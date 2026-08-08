@@ -26,3 +26,9 @@ jobs:
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           pr-labels: |
             auto-merge
+
+      - name: Enable GitHub Native Auto-Merge
+        if: steps.update.outputs.pull-request-number != ''
+        run: "gh pr merge --auto --squash ${{ steps.update.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
