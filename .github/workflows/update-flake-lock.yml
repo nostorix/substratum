@@ -1,0 +1,25 @@
+name: "Update flakes"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0' # runs weekly on Sunday at 00:00
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/update-flake-lock@main
+        id: update
+        with:
+          commit-msg: "chore(flake): bump inputs"
+          pr-title: "chore(flake): bump inputs"
+          token: ${{ steps.app-token.outputs.token }}
+          labels: |
+            auto-merge
