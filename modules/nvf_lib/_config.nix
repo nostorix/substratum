@@ -167,7 +167,7 @@
         extraDiagnostics.enable = true;
         treesitter.enable = true;
       };
-      ts = {
+      typescript = {
         enable = true;
         #lsp.servers = [];
       };
