@@ -14,7 +14,7 @@ let
     url = "https://api.hayase.watch/files/linux-hayase-${version}-linux.AppImage";
     hash = "sha256-Qdi5NO8G8JLUFNDJoCvnM/zZsDlEPn3/GnKAoAosG+0=";
   };
-  contents = appimageTools.extractType2 {
+  contents = appimageTools.extract {
     inherit pname version src;
   };
 in
