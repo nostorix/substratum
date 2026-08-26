@@ -7,6 +7,7 @@
       lib,
       system,
       self',
+      inputs',
       ...
     }:
     {
@@ -21,7 +22,7 @@
         lib.listToAttrs (
           map (file: {
             name = lib.removeSuffix ".nix" (baseNameOf file);
-            value = pkgs.callPackage file { inherit self; };
+            value = pkgs.callPackage file { inherit self inputs'; };
           }) tree.result
         );
 

@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "electron-nixpkgs": {
+      "locked": {
+        "lastModified": 1785711417,
+        "narHash": "sha256-SV2x9frH96xvd3AAHk6Y2Zgcj68v/J829kyA1oJesgs=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f82dc8ebe9d6e4c3bd65ab162d62ba566f39066c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f82dc8ebe9d6e4c3bd65ab162d62ba566f39066c",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -119,6 +135,7 @@
     },
     "root": {
       "inputs": {
+        "electron-nixpkgs": "electron-nixpkgs",
         "flake-parts": "flake-parts",
         "import-tree": "import-tree",
         "nixpkgs": "nixpkgs",
