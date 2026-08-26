@@ -8,6 +8,8 @@
 
     import-tree.url = "github:vic/import-tree";
 
+    electron-nixpkgs.url = "github:NixOS/nixpkgs/f82dc8ebe9d6e4c3bd65ab162d62ba566f39066c";
+
     nvf = {
       url = "github:NotAShelf/nvf";
       inputs.nixpkgs.follows = "nixpkgs";
