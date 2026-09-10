@@ -17,7 +17,7 @@
       };
       packages =
         let
-          tree = (inputs.import-tree.new.addPath ../packages).leafs.withLib lib;
+          tree = (inputs.import-tree.new.addPath ../packages).leaves.withLib lib;
         in
         lib.listToAttrs (
           map (file: {
